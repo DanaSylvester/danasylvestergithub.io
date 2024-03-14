@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparison of National Park Fatality in 2017-2018</title>
+    <style>
+        .subsection-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .subsection-container img {
+            width: 45%; /* Adjust width as needed */
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Introduction</h1>
+    <p>The National Park manages over 85 million acres of land, and with this also comes the responsibility of managing search and rescue missions for those who get lost, injured, or pass away. This goes over a small portion of available mission data in 2017 and 2018, comparing the fatality rates between parks.</p>
+    <p>Data Used: https://www.arcgis.com/home/item.html?id=983c8463a7bb4237b63ad9f409ed75f4 & https://www.arcgis.com/home/item.html?id=d121683e85ae4d148efe984b16fbad7f</p>
+    <p>Read CSV File: csv_path <- "C:/Users/danas/Documents/School/Earth Systems R/data/"
+        csv_name <- "20190724_Georeferenced_ABBRV_2018AnnualSAR_0.csv"
+        csv_file <- paste(csv_path, csv_name, sep="")
+        sar_csv <- read.csv(csv_file)</p>
+   
+
+    <h2>Subsection 1</h2>
+    <p>These two maps compare the amount of fatal missions across the US between the years of 2017-2018, there was an increase in fatalities and total missions amounts in 2018</p>
+    <p>us_states_sf <- st_read("C:/Users/danas/Documents/School/Earth Systems R/data/cb_2018_us_state_500k.shp")
+
+        # Subset data based on fatalities
+        subset_data <- subset(sar_csv, !is.na(Fatality))
+        
+        # Plot
+        ggplot() + 
+          geom_sf(data = us_states_sf, fill = NA) + 
+          geom_point(data = subset_data, aes(x = LONGITUDE, y = LATITUDE, size = Fatality, color = ifelse(Fatality == 0, "Non-Fatal", "Fatal"))) +
+          scale_color_manual(name = "Fatality",
+                             values = c("Non-Fatal" = "blue", "Fatal" = "red"),
+                             labels = c("Fatal Mission", "Non_Fatal Mission")) +
+          scale_size_continuous(name = "Number of Fatalities 2018") +
+          coord_sf(xlim = c(-125, -65), ylim = c(25, 50), expand = FALSE) +  
+          theme_bw()</p>
+    <div class="subsection-container">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\total_fatality_2017.png" alt="2017 Total Mission Fatality">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\total_fatality_2018.png" alt="2018 Total Mission Fatality">
+    </div>
+
+    <p>In 2018 the top states for missions were California: 385 Utah: 376 and Arizona: 298</p>
+    <p>In 2017 the top states was California: 606 Nevada: 566 and Arizona: 343 </p>
+    <p> There may me a higher amount of missions in the top states in 2017, however more national parks had a higher amount of missions (fatal) in 2018, suggesting that there was something that either caused an increase in unsafe situations or an overall increase in visitors across all parks</p>
+    <p>This displays the fataltiy data by park in the top states in two formats</p>
+    <p> 
+        az_data <- subset(sar_csv, State == "AZ")
+        df <- data.frame(Park = az_data$Park, Fatality = az_data$Fatality)
+        
+        
+        
+        df_long <- pivot_longer(df, cols = "Fatality", names_to = "Fatalities", values_to = "Count")
+        
+        
+        ggplot(df_long, aes(x = Park, y = Count, fill = Fatalities)) +
+          geom_bar(stat = "identity", position = "dodge") +
+          labs(title = " Arizona Parks Comparison by Fatality 2018",
+               x = "Park", y = "Count") +
+          theme_minimal() +
+          theme(axis.text.x = element_text(angle = 45, hjust = 1))</p>
+    <p> nps_boundaries <- st_read("C:/Users/danas/Documents/School/Earth Systems R/final/nps_boundary.shp")
+
+        # Filter SAR CSV data for California
+        subset_data_az <- subset_data %>% filter(State == "AZ")
+        # Plot
+        ggplot() + 
+          geom_sf(data = us_states_sf, fill = NA) + 
+          geom_sf(data = nps_boundaries, fill = NA, color = "black", size = 0.5) +  # Add national park boundaries
+          geom_point(data = subset_data_az, aes(x = LONGITUDE, y = LATITUDE, 
+                                                size = ifelse(Fatality == 0, Total, Fatality), 
+                                                color = ifelse(Fatality == 0, "Non-Fatal", "Fatal")), 
+                     alpha = 0.6) +  # Add transparency for better visualization
+          scale_color_manual(name = "Fatality",
+                             values = c("Non-Fatal" = "blue", "Fatal" = "red"),
+                             labels = c("Fatal Mission", "Non-Fatal Mission")) +
+          scale_size_continuous(name = "Number of Fatalities 2018", range = c(1, 10)) +  # Adjust size range
+          coord_sf(xlim = c(-115, -108), ylim = c(31, 38), expand = FALSE) +   
+          theme_bw()</p>
+        <h2>Arizona</h2>
+    <div class="subsection-container">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\arizona_park_fatality_2018.png" alt="Arizona Mission Fatality 2018">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\arizona_2017_fatality.png" alt="Arizona Mission Fatality 2017">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\az_2018_map.png" alt="Arizona Mission Fatality 2018 Map">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\az_2017_map1.png" alt="Arizona Mission Fatality 2017 Map">
+    </div>
+
+    <h2>California</h2>
+    <p>Same code was used as AZ, just with different state and zoom</p>
+    <div class="subsection-container">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\california_park_fatality_2018.png" alt="California Mission Fatality 2018">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\ca_2017.png" alt="California Mission Fatality 2017">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\ca_fatality_2018_map.png" alt="California Mission Fatality 2018 Map">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\california_fatality_2017_map.png" alt="California Mission Fatality 2017 Map">
+    </div>
+
+    <h2>Utah</h2>
+    <p>Same code was used as AZ, just with different state and zoom</p>
+    <div class="subsection-container">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\utah_fatality_2018.png" alt="Utah Mission Fatality 2018">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\ut_2017.png" alt="Utah Mission Fatality 2017">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\utah_fatailty_2018_map.png" alt="Utah Mission Fatality 2017 Map">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\utah_fatailty_2017_map.png" alt="Utah Mission Fatality 2017 Map">
+    </div>
+    
+    <h2>Gender & Fatality</h2>
+    <p>This is looking at the differences in fatality between gender, there is a slight overall hihger amount of men who die in the parks</p>
+    <p>df <- data.frame(sar_csv$Fatality, sar_csv$Male, sar_csv$Female)
+
+
+        colnames(df) <- c("Fatality", "Male", "Female")
+        
+        
+        df_long <- pivot_longer(df, cols = c("Male", "Female"), names_to = "Gender", values_to = "Count")
+        
+        
+        ggplot(df_long, aes(x = Fatality, y = Count, fill = Gender)) +
+          geom_bar(stat = "identity", position = "dodge") +
+          labs(title = "Fatality Comparison by Gender 2018",
+               x = "Fatality", y = "Count") +
+          scale_fill_manual(values = c("Male" = "skyblue", "Female" = "pink")) +
+          theme_minimal()</p>
+    <div class="subsection-container">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\gender_fatality_2018.png" alt="Gender Comparasion Fatality 2018">
+        <img src="C:\Users\danas\Documents\School\Earth Systems R\final\fatality_gender_2017.png" alt="Gender Comparasion Fatality 2017">
+    </div>
+
+    <h2>Significant Difference?</h2>
+    <p>Using a chi sqaured test between the two years fatalities, the p values came out to be extremely small meaning that we reject the null hypothesis, indicating that there is a signifcant association between fatality rates in 2017 to 2018</p>
+    <p>contingency_table_2017 <- table(sar_csv_2017$Fatality)
+        contingency_table_2018 <- table(sar_csv$Fatality)
+        
+        # Perform Chi-squared tests for each dataset separately
+        chi_squared_test_2017 <- chisq.test(contingency_table_2017)
+        chi_squared_test_2018 <- chisq.test(contingency_table_2018)
+        
+        # Print the Chi-squared test results
+        print(chi_squared_test_2017)
+        print(chi_squared_test_2018) </p>
+    <p>
+        Chi-squared test for given probabilities
+    
+    data:  contingency_table_2017
+    X-squared = 810.62, df = 11, p-value < 2.2e-16
+    
+    
+        Chi-squared test for given probabilities
+    
+    data:  contingency_table_2018
+    X-squared = 727.13, df = 10, p-value < 2.2e-16
+    
+    </p>
+
+</body>
+</html>
